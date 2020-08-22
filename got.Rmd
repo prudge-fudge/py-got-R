@@ -1,0 +1,71 @@
+```{r setup, include=FALSE, echo=TRUE}
+
+library(reticulate)
+use_python("C:/Users/HP/AppData/Local/r-miniconda/envs/r-reticulate/python.exe")
+use_virtualenv("~/myenv")
+use_condaenv("myenv")
+reticulate::py_config()
+py_install("pandas")
+
+#r variables to be passed into python
+
+query <- "blink"
+strt_date <- "2015-05-01"
+end_date <- "2015-09-30"
+tweet_cnt <- 10
+lang <-"en"
+location <- "India"
+radius <- "500mi"
+
+
+```
+
+
+```{python}
+
+import pandas as pd
+import GetOldTweets3 as got
+
+query = r.query
+strt_date = r.strt_date
+end_date = r.end_date
+tweet_cnt = r.tweet_cnt
+lang = r.lang
+location = r.location
+radius= r.radius
+
+tweetCriteria = got.manager.TweetCriteria().setQuerySearch(query)\
+                                           .setSince(strt_date)\
+                                           .setUntil(end_date)\
+                                           .setLang(lang)\
+                                           .setNear(location)\
+                                           .setWithin(radius)\
+                                           .setMaxTweets(tweet_cnt)
+tweets = got.manager.TweetManager.getTweets(tweetCriteria)
+
+#Creating a list with tweet data
+text_tweets = [[tw.username,
+                tw.text,
+                tw.date,
+                tw.retweets,
+                tw.favorites,
+                tw.mentions,
+                tw.hashtags] for tw in tweets]
+#Creating a dataframe
+df = pd.DataFrame(text_tweets, 
+                            columns = ['User', 'Text','Date','Favorites', 'Retweets', 'Mentions', 'HashTags'])
+
+df.head()
+
+```
+```{r}
+#Assigning R dataframe to python dataframe value
+df2 <- reticulate::py$df
+print(df2)
+
+#Create csv with dataframe
+write.csv(df2,"test.csv", row.names = FALSE)
+``` 
+
+
+
